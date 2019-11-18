@@ -10,10 +10,10 @@ public class DummyMainServer {
     try {
       server1.start();
       server1.shutdownNow();
-      System.out.println("shutdown");
     } catch (IOException e) {
       e.printStackTrace();
     }
+    System.out.println("shutdown server");
   }
 
 }
