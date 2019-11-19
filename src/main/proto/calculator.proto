@@ -1,0 +1,17 @@
+syntax = "proto3";
+option java_package = "com.sample.math";
+option java_multiple_files = true;
+
+message CalculatorRequest {
+  int32 a = 1;
+  int32 b = 2;
+}
+
+message CalculatorResponse {
+  int32 result = 1;
+}
+
+service CalculatorService {
+  rpc Sum (CalculatorRequest) returns (CalculatorResponse) {
+  };
+}
