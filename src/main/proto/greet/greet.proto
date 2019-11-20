@@ -5,7 +5,11 @@ option java_package = "com.sample.greet";
 option java_multiple_files = true;
 
 service GreetService {
+  //unary
   rpc Greet (GreetRequest) returns (GreetResponse) {
+  };
+  //server streaming
+  rpc GreetManyService (GreetManyTimesRequest) returns (stream GreetManyTimesResponse) {
   };
 }
 
@@ -20,4 +24,12 @@ message GreetRequest {
 
 message GreetResponse {
   string resultId = 2;
+}
+
+message GreetManyTimesRequest {
+  Greeting greeting = 1;
+}
+
+message GreetManyTimesResponse {
+  string result = 1;
 }
