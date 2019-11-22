@@ -35,4 +35,32 @@ public class CalculatorServiceImpl extends CalculatorServiceImplBase {
       responseObserver.onCompleted();
     }
   }
+
+  @Override
+  public StreamObserver<ComputeAverageRequest> computeAverage(
+      StreamObserver<ComputeAverageResponse> responseObserver) {
+    StreamObserver<ComputeAverageRequest> StreamObserverRequest = new StreamObserver<ComputeAverageRequest>() {
+      int sum = 0;
+      double count = 0;
+
+      @Override
+      public void onNext(ComputeAverageRequest computeAverageRequest) {
+        sum = sum + computeAverageRequest.getNumber();
+        count++;
+      }
+
+      @Override
+      public void onError(Throwable t) {
+        t.printStackTrace();
+      }
+
+      @Override
+      public void onCompleted() {
+        responseObserver
+            .onNext(ComputeAverageResponse.newBuilder().setNumber(sum / count).build());
+        responseObserver.onCompleted();
+      }
+    };
+    return StreamObserverRequest;
+  }
 }

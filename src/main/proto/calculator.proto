@@ -18,10 +18,21 @@ message PrimeNumberDecompositionRequest {
 message PrimeNumberDecompositionResponse {
   int32 result = 1;
 }
+
+message ComputeAverageRequest {
+  int32 number = 1;
+}
+
+message ComputeAverageResponse {
+  double number = 1;
+}
+
 service CalculatorService {
   rpc Sum (CalculatorRequest) returns (CalculatorResponse) {
   };
   rpc PrimeNumberDecomposition (PrimeNumberDecompositionRequest) returns (stream PrimeNumberDecompositionResponse) {
+  };
+  rpc ComputeAverage (stream ComputeAverageRequest) returns (ComputeAverageResponse) {
   };
 }
 

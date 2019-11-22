@@ -1,5 +1,7 @@
 package com.sample.greeting;
 
+import com.sample.greet.GreetEveryOneRequest;
+import com.sample.greet.GreetEveryOneResponse;
 import com.sample.greet.GreetManyTimesRequest;
 import com.sample.greet.GreetManyTimesResponse;
 import com.sample.greet.GreetRequest;
@@ -73,5 +75,32 @@ public class GreetingServiceImpl extends GreetServiceImplBase {
       }
     };
     return requestStreamObserver;
+  }
+
+  @Override
+  public StreamObserver<GreetEveryOneRequest> greetEveryone(
+      StreamObserver<GreetEveryOneResponse> responseObserver) {
+    StreamObserver<GreetEveryOneRequest> streamObserver = new StreamObserver<GreetEveryOneRequest>() {
+      int c=0;
+      @Override
+      public void onNext(GreetEveryOneRequest greetEveryOneRequest) {
+        c++;
+        responseObserver.onNext(
+            GreetEveryOneResponse.newBuilder()
+                .setResult(c+": Hi " + greetEveryOneRequest.getGreeting().getFirstName()).build());
+      }
+
+      @Override
+      public void onError(Throwable t) {
+        t.printStackTrace();
+      }
+
+      @Override
+      public void onCompleted() {
+        System.out.println("All request received !!");
+        responseObserver.onCompleted();
+      }
+    };
+    return streamObserver;
   }
 }

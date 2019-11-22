@@ -1,12 +1,13 @@
 package com.sample.greeting;
 
+import com.sample.greet.GreetEveryOneRequest;
+import com.sample.greet.GreetEveryOneResponse;
 import com.sample.greet.GreetManyTimesRequest;
 import com.sample.greet.GreetManyTimesResponse;
 import com.sample.greet.GreetRequest;
 import com.sample.greet.GreetResponse;
 import com.sample.greet.GreetServiceGrpc;
 import com.sample.greet.GreetServiceGrpc.GreetServiceBlockingStub;
-import com.sample.greet.GreetServiceGrpc.GreetServiceFutureStub;
 import com.sample.greet.GreetServiceGrpc.GreetServiceStub;
 import com.sample.greet.Greeting;
 import com.sample.greet.LongGreetRequest;
@@ -15,7 +16,6 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -30,8 +30,49 @@ public class GreetingClient {
         .newBlockingStub(managedChannel);
     //testUnaryApi(greetServiceBlockingStub);
     //testServerStreamingApi(greetServiceBlockingStub);
-    testClientStreamingApi(managedChannel);
+    //testClientStreamingApi(managedChannel);
+    testBiDiApi(managedChannel);
     managedChannel.shutdown();
+  }
+
+  private static void testBiDiApi(ManagedChannel managedChannel) {
+    System.out.println("Inside Bi Directional streaming api");
+    CountDownLatch latch = new CountDownLatch(1);
+    GreetServiceStub asyncStub = GreetServiceGrpc.newStub(managedChannel);
+    StreamObserver<GreetEveryOneRequest> greetEveryOneRequestStreamObserver = asyncStub
+        .greetEveryone(new StreamObserver<GreetEveryOneResponse>() {
+
+          @Override
+          public void onNext(GreetEveryOneResponse greetEveryOneResponse) {
+            System.out.println(
+                " Server Response received : " + greetEveryOneResponse.getResult());
+          }
+
+          @Override
+          public void onError(Throwable t) {
+            t.printStackTrace();
+            latch.countDown();
+          }
+
+          @Override
+          public void onCompleted() {
+            System.out.println("Server is done sending data");
+            latch.countDown();
+          }
+        });
+
+    greetEveryOneRequestStreamObserver.onNext(GreetEveryOneRequest.newBuilder().setGreeting(
+        Greeting.newBuilder().setFirstName("kush").build()).build());
+    greetEveryOneRequestStreamObserver.onNext(GreetEveryOneRequest.newBuilder().setGreeting(
+        Greeting.newBuilder().setFirstName("luv").build()).build());
+    greetEveryOneRequestStreamObserver.onNext(GreetEveryOneRequest.newBuilder().setGreeting(
+        Greeting.newBuilder().setFirstName("rahul").build()).build());
+    greetEveryOneRequestStreamObserver.onCompleted();
+    try {
+      latch.await(3, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
   private static void testClientStreamingApi(ManagedChannel managedChannel) {
@@ -76,6 +117,7 @@ public class GreetingClient {
     requestStreamObserver.onCompleted();
     try {
       //wait for countdown latch to set to 0 for 3 seconds. i.e. it waits for server to send only response here
+      //otherwise main method would have finsihed without waiting server response.
       latch.await(3, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
       e.printStackTrace();
