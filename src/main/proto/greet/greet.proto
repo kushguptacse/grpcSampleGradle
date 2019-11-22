@@ -11,6 +11,9 @@ service GreetService {
   //server streaming
   rpc GreetManyService (GreetManyTimesRequest) returns (stream GreetManyTimesResponse) {
   };
+  //client streaming
+  rpc LongGreet (stream LongGreetRequest) returns (LongGreetResponse) {
+  };
 }
 
 message Greeting {
@@ -31,5 +34,13 @@ message GreetManyTimesRequest {
 }
 
 message GreetManyTimesResponse {
+  string result = 1;
+}
+
+message LongGreetRequest {
+  Greeting greeting = 1;
+}
+
+message LongGreetResponse {
   string result = 1;
 }

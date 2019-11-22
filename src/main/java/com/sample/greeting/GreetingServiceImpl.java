@@ -5,6 +5,8 @@ import com.sample.greet.GreetManyTimesResponse;
 import com.sample.greet.GreetRequest;
 import com.sample.greet.GreetResponse;
 import com.sample.greet.GreetServiceGrpc.GreetServiceImplBase;
+import com.sample.greet.LongGreetRequest;
+import com.sample.greet.LongGreetResponse;
 import io.grpc.stub.StreamObserver;
 
 public class GreetingServiceImpl extends GreetServiceImplBase {
@@ -42,5 +44,34 @@ public class GreetingServiceImpl extends GreetServiceImplBase {
     } finally {
       responseObserver.onCompleted();
     }
+  }
+
+  @Override
+  public StreamObserver<LongGreetRequest> longGreet(
+      StreamObserver<LongGreetResponse> responseObserver) {
+    StreamObserver<LongGreetRequest> requestStreamObserver = new StreamObserver<LongGreetRequest>() {
+      String result = "Hi from";
+
+      @Override
+      public void onNext(LongGreetRequest value) {
+        //when clients send message this is invoked.
+        result =
+            result + " " + value.getGreeting().getFirstName() + "-" + value.getGreeting()
+                .getLastName();
+      }
+
+      @Override
+      public void onError(Throwable t) {
+        //when clients send error.
+      }
+
+      @Override
+      public void onCompleted() {
+        //when client is done with all the request.
+        responseObserver.onNext(LongGreetResponse.newBuilder().setResult(result).build());
+        responseObserver.onCompleted();
+      }
+    };
+    return requestStreamObserver;
   }
 }
