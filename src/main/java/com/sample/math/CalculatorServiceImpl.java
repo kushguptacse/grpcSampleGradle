@@ -63,4 +63,34 @@ public class CalculatorServiceImpl extends CalculatorServiceImplBase {
     };
     return StreamObserverRequest;
   }
+
+  @Override
+  public StreamObserver<NumberRequest> findMaximum(
+      StreamObserver<NumberResponse> responseObserver) {
+
+    StreamObserver<NumberRequest> numberRequestStreamObserver = new StreamObserver<NumberRequest>() {
+      int max = 0;
+
+      @Override
+      public void onNext(NumberRequest numberRequest) {
+        System.out.println("Received Request "+ numberRequest.getNumber());
+        if (numberRequest.getNumber() > max) {
+          max = numberRequest.getNumber();
+          responseObserver.onNext(NumberResponse.newBuilder().setMax(max).build());
+        }
+      }
+
+      @Override
+      public void onError(Throwable t) {
+        t.printStackTrace();
+      }
+
+      @Override
+      public void onCompleted() {
+        System.out.println("All Request received");
+        responseObserver.onCompleted();
+      }
+    };
+    return numberRequestStreamObserver;
+  }
 }

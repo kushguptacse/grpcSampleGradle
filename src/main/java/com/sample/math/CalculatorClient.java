@@ -14,15 +14,56 @@ public class CalculatorClient {
     ManagedChannel managedChannel = ManagedChannelBuilder.forAddress("localhost", 50054)
         .usePlaintext().build();
     //unary api test - sum of two numbers
-    unaryApiTest(managedChannel);
+    // unaryApiTest(managedChannel);
 
     System.out.println("-------------------------");
-    //client stream api test
-    clientStreamTest(managedChannel);
+    //client stream api test - compute avg of numbers
+    //clientStreamTest(managedChannel);
 
     System.out.println("-------------------------");
     //server stream api- returns a stream of Responses that represent the prime number decomposition of that number
-    serverStreamTest(managedChannel);
+    //serverStreamTest(managedChannel);
+    System.out.println("-------------------------");
+    //bi-directional stream api - from input stream print max number
+    bidiStreamTest(managedChannel);
+    managedChannel.shutdown();
+  }
+
+  private static void bidiStreamTest(ManagedChannel managedChannel) {
+    System.out.println("Bi Directional Stream test started");
+    CalculatorServiceStub asyncStub = CalculatorServiceGrpc.newStub(managedChannel);
+    CountDownLatch latch = new CountDownLatch(1);
+    StreamObserver<NumberRequest> streamNumberRequest = asyncStub
+        .findMaximum(new StreamObserver<NumberResponse>() {
+          @Override
+          public void onNext(NumberResponse numberResponse) {
+            System.out.println("Current maximum element is : " + numberResponse.getMax());
+
+          }
+
+          @Override
+          public void onError(Throwable t) {
+
+          }
+
+          @Override
+          public void onCompleted() {
+            System.out.println("Response finished");
+            latch.countDown();
+          }
+        });
+    streamNumberRequest.onNext(NumberRequest.newBuilder().setNumber(1).build());
+    streamNumberRequest.onNext(NumberRequest.newBuilder().setNumber(5).build());
+    streamNumberRequest.onNext(NumberRequest.newBuilder().setNumber(3).build());
+    streamNumberRequest.onNext(NumberRequest.newBuilder().setNumber(6).build());
+    streamNumberRequest.onNext(NumberRequest.newBuilder().setNumber(2).build());
+    streamNumberRequest.onNext(NumberRequest.newBuilder().setNumber(20).build());
+    streamNumberRequest.onCompleted();
+    try {
+      latch.await(3, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
 
