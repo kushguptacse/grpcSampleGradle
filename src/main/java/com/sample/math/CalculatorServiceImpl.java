@@ -1,6 +1,7 @@
 package com.sample.math;
 
 import com.sample.math.CalculatorServiceGrpc.CalculatorServiceImplBase;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 public class CalculatorServiceImpl extends CalculatorServiceImplBase {
@@ -73,7 +74,7 @@ public class CalculatorServiceImpl extends CalculatorServiceImplBase {
 
       @Override
       public void onNext(NumberRequest numberRequest) {
-        System.out.println("Received Request "+ numberRequest.getNumber());
+        System.out.println("Received Request " + numberRequest.getNumber());
         if (numberRequest.getNumber() > max) {
           max = numberRequest.getNumber();
           responseObserver.onNext(NumberResponse.newBuilder().setMax(max).build());
@@ -92,5 +93,22 @@ public class CalculatorServiceImpl extends CalculatorServiceImplBase {
       }
     };
     return numberRequestStreamObserver;
+  }
+
+  @Override
+  public void squareRoot(SquareRootRequest request,
+      StreamObserver<SquareRootResponse> responseObserver) {
+    int num = request.getNumber();
+    if (num < 0) {
+      //if number is negative throw status runtime exception with description and additional description
+      responseObserver.onError(
+          Status.INVALID_ARGUMENT.withDescription("Number sent is not positive")
+              .augmentDescription("Number sent: " + num).asRuntimeException());
+      //we dont need onComplete now as we have used onError method.
+    } else {
+      double result = Math.sqrt(num);
+      responseObserver.onNext(SquareRootResponse.newBuilder().setResult(result).build());
+      responseObserver.onCompleted();
+    }
   }
 }

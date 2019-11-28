@@ -9,11 +9,16 @@ import com.sample.greet.GreetResponse;
 import com.sample.greet.GreetServiceGrpc;
 import com.sample.greet.GreetServiceGrpc.GreetServiceBlockingStub;
 import com.sample.greet.GreetServiceGrpc.GreetServiceStub;
+import com.sample.greet.GreetWithDeadlineRequest;
+import com.sample.greet.GreetWithDeadlineResponse;
 import com.sample.greet.Greeting;
 import com.sample.greet.LongGreetRequest;
 import com.sample.greet.LongGreetResponse;
+import io.grpc.Deadline;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import java.util.Iterator;
 import java.util.concurrent.CountDownLatch;
@@ -28,11 +33,50 @@ public class GreetingClient {
     System.out.println("creating Blocking stub");
     GreetServiceBlockingStub greetServiceBlockingStub = GreetServiceGrpc
         .newBlockingStub(managedChannel);
+    testUnaryDeadlineTest(greetServiceBlockingStub);
     //testUnaryApi(greetServiceBlockingStub);
     //testServerStreamingApi(greetServiceBlockingStub);
     //testClientStreamingApi(managedChannel);
     testBiDiApi(managedChannel);
     managedChannel.shutdown();
+  }
+
+  private static void testUnaryDeadlineTest(GreetServiceBlockingStub greetServiceBlockingStub) {
+    System.out.println("Deadline test started !!");
+
+    GreetWithDeadlineRequest request = GreetWithDeadlineRequest.newBuilder().setGreeting(
+        Greeting.newBuilder().setFirstName("kush").build()).build();
+
+    try {
+      System.out.println("Calling rpc with deadline of 5000 milli seconds");
+      GreetWithDeadlineResponse response = greetServiceBlockingStub
+          .withDeadline(Deadline.after(5000, TimeUnit.MILLISECONDS))
+          .greetWithDeadline(request);
+      System.out.println("Response :" + response.getResultId());
+    } catch (StatusRuntimeException sre) {
+      if (Status.DEADLINE_EXCEEDED.getCode().equals(sre.getStatus().getCode())) {
+        System.out.println("deadline exceeded and hence we dont want response ");
+      } else {
+        sre.printStackTrace();
+      }
+    }
+
+    System.out.println("------------------------------------------------------");
+
+    try {
+      System.out.println("Calling rpc with deadline of 200 milli seconds");
+      GreetWithDeadlineResponse response = greetServiceBlockingStub
+          .withDeadline(Deadline.after(200, TimeUnit.MILLISECONDS))
+          .greetWithDeadline(request);
+      System.out.println("Response :" + response.getResultId());
+    } catch (StatusRuntimeException sre) {
+      if (Status.DEADLINE_EXCEEDED.getCode().equals(sre.getStatus().getCode())) {
+        System.out.println("deadline exceeded and hence we dont want response ");
+      } else {
+        sre.printStackTrace();
+      }
+    }
+
   }
 
   private static void testBiDiApi(ManagedChannel managedChannel) {

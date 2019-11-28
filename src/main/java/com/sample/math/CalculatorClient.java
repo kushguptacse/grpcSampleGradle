@@ -4,6 +4,7 @@ import com.sample.math.CalculatorServiceGrpc.CalculatorServiceBlockingStub;
 import com.sample.math.CalculatorServiceGrpc.CalculatorServiceStub;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -26,7 +27,33 @@ public class CalculatorClient {
     System.out.println("-------------------------");
     //bi-directional stream api - from input stream print max number
     bidiStreamTest(managedChannel);
+
+    //error handling sample
+    errorHandlingSquareRoot(managedChannel);
+
     managedChannel.shutdown();
+  }
+
+  private static void errorHandlingSquareRoot(ManagedChannel managedChannel) {
+    System.out.println("------------------------------------");
+    System.out.println("error Handling SquareRoot test started");
+    CalculatorServiceBlockingStub calculatorServiceBlockingStub = CalculatorServiceGrpc
+        .newBlockingStub(managedChannel);
+    int input = 36;
+    System.out.println("Square root of " + input + " number is - ");
+    SquareRootResponse squareRootResponse = calculatorServiceBlockingStub
+        .squareRoot(SquareRootRequest.newBuilder().setNumber(input).build());
+    System.out.println(squareRootResponse.getResult());
+    input = -4;
+    try {
+      System.out.println("Square root of " + input + " number is - ");
+      squareRootResponse = calculatorServiceBlockingStub
+          .squareRoot(SquareRootRequest.newBuilder().setNumber(input).build());
+      System.out.println(squareRootResponse.getResult());
+    } catch (StatusRuntimeException sre) {
+      System.out.println("Exception occurred !!!!!!!");
+      sre.printStackTrace();
+    }
   }
 
   private static void bidiStreamTest(ManagedChannel managedChannel) {
